@@ -1,2 +1,2 @@
 # Individual-Optimization-Based-on-Group-Information-Sharing
-Multi-agent reinforcement learning with continues cross-domain transfer learning
+Multi-agent reinforcement learning with continuous cross-domain transfer learning

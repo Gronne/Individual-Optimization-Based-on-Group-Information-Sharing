@@ -11,6 +11,7 @@ f1 = GF()
 f1.add_map_layout(GF.MapLayout.DefaultMap1, map_setup)
 f1.add_start_position((3, 3))
 f1.add_controls(GF.Controls.UpDown)
+f1.add_block(GF.BlockColor.Red, GF.BlockEffect.TakeLife, [(4, 5), (4, 10), (6, 7), (6, 8), (7, 5), (7, 10), (8, 6), (8, 7), (8, 8), (8, 9), (9, 3)], effect_strength=5)
 
 f2 = GF()
 f2.add_map_layout(GF.MapLayout.DefaultMap2, map_setup)

@@ -19,6 +19,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         Blue = "Blue"
         Red = "Red"
         Green = "Green"
+        Yellow = "Yellow"
 
     class MonsterEffect:
         Kill = "Kill"
@@ -46,6 +47,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         Blue = "Blue"
         Red = "Red"
         Green = "Green"
+        Yellow = "Yellow"
 
     class BlockEffect:
         Nothing = "Nothing"
@@ -58,6 +60,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         Blue = "Blue"
         Red = "Red"
         Green = "Green"
+        Yellow = "Yellow"
 
     class ItemEffect:
         GivePoints = "GivePoints"
@@ -179,6 +182,8 @@ class GameObject:
             new_color = (0, 0, 0)
         elif color_str.lower() == "white":
             new_color = (255, 255, 255)
+        elif color_str.lower() == "yellow":
+            new_color = (0, 255, 255)
         else:
             raise Exception(color_str + " color does not exist for Blocks")
         return new_color

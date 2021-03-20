@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
     class Controls:
@@ -87,7 +88,8 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
                             "Map Size": (0, 0),
                             "Control": GameFeatures.Controls.AllArrows,
                             "Goals": [GameFeatures.GoalSystem.Point],
-                            "Survival": [GameFeatures.SurvivalProperty.Nothing]}
+                            "Survival": []}
+        self.add_survival_property(GameFeatures.SurvivalProperty.Nothing)
 
     def add_controls(self, control_type):   #Only one
         self._features["Control"] = control_type
@@ -108,25 +110,26 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         for array in map_split:
             if len(array) != array_length:
                 raise Exception("Invalid Map row Lengths")
-    def add_monster(self, m_type, color, effect, behaviour, locations):    #Multiple 
-        self._features["Monsters"] += [ {"Object": GameMonster(m_type, color, effect, behaviour, location), "Location": location, "Start Location": location} for location in locations]
 
-    def add_block(self, color, effect, locations): #Multiple 
+    def add_monster(self, m_type, color, effect, behaviour, locations, speed = 1, effect_strength = 1):    #Multiple 
+        self._features["Monsters"] += [ {"Object": GameMonster(m_type, color, effect, behaviour, location, speed, effect_strength), "Location": location, "Start Location": location} for location in locations]
+
+    def add_block(self, color, effect, locations, effect_strength = 1): #Multiple 
         for location in locations:
             if (location[0] > 0 and location[0] <= self._features["Map Size"][1]) and (location[1] > 0 and location[1] <= self._features["Map Size"][1]):
-                self._features["Map"][location] = {"Object": GameBlock(color, effect), "Location": location, "Start Location": location}
+                self._features["Map"][location] = {"Object": GameBlock(color, effect, effect_strength), "Location": location, "Start Location": location}
             else:
                 raise Exception("Block outsite out scope")
 
 
-    def add_item(self, color, effect, behaviour, locations):  #Multiple 
-        self._features["Items"] += [ {"Object": GameItem(color, effect, behaviour, location), "Location": location, "Start Location": location} for location in locations]
+    def add_item(self, color, effect, behaviour, locations, respawn_time = 10, effect_strength=1):  #Multiple 
+        self._features["Items"] += [ {"Object": GameItem(color, effect, behaviour, location, respawn_time, effect_strength), "Location": location, "Start Location": location} for location in locations]
 
-    def add_goal(self, point_type):       #Only One
+    def add_goal(self, point_type):
         self._features["Goals"] += [point_type]
 
-    def add_survival_property(self, s_type):  #Only One
-        self._features["Survival"] += [s_type]
+    def add_survival_property(self, s_type, interval = 10, strength = 1):
+        self._features["Survival"] += [{"Property": s_type, "Interval": interval, "Strength": strength}]
 
     def add_start_position(self, location):
         self._features["Start"] = location
@@ -182,42 +185,66 @@ class GameObject:
 
     def _possible_to_move_left(self, location, game_map, map_size):
         move_out_of_bound = location[1] > 1
-        move_into_solid_object = game_map[(location[0], location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0], location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_right(self, location, game_map, map_size):
         move_out_of_bound = location[1] < map_size[1]
-        move_into_solid_object = game_map[(location[0], location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0], location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_up(self, location, game_map, map_size):
         move_out_of_bound = location[0] > 1
-        move_into_solid_object = game_map[(location[0]-1, location[1])]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]-1, location[1])]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_down(self, location, game_map, map_size):
         move_out_of_bound = location[0] < map_size[0]
-        move_into_solid_object = game_map[(location[0]+1, location[1])]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]+1, location[1])]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_diaLeftUp(self, location, game_map, map_size):
         move_out_of_bound = location[1] > 1 and location[0] > 1
-        move_into_solid_object = game_map[(location[0]-1, location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]-1, location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_diaLeftDown(self, location, game_map, map_size):
         move_out_of_bound = location[1] < map_size[1] and location[0] < map_size[0]
-        move_into_solid_object = game_map[(location[0]+1, location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]+1, location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_diaRightUp(self, location, game_map, map_size):
         move_out_of_bound = location[0] > 1 and location[1] < map_size[1]
-        move_into_solid_object = game_map[(location[0]-1, location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]-1, location[1]+1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
 
     def _possible_to_move_diaRightDown(self, location, game_map, map_size):
         move_out_of_bound = location[1] > 1 and location[0] < map_size[0]
-        move_into_solid_object = game_map[(location[0]+1, location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        if move_out_of_bound == True:
+            move_into_solid_object = game_map[(location[0]+1, location[1]-1)]["Object"].get_effect() != GameFeatures.BlockEffect.Block
+        else:
+            move_into_solid_object = False
         return not (not move_out_of_bound or not move_into_solid_object)
     
     def _move_left(self, location):
@@ -248,9 +275,10 @@ class GameObject:
 
 
 class GameBlock(GameObject):
-    def __init__(self, color, effect):
+    def __init__(self, color, effect, effect_strength=1):
         self._color = super()._create_color(color)
         self._effect = effect
+        self._effect_strength = effect_strength
 
     def get_color(self):
         return self._color
@@ -258,17 +286,23 @@ class GameBlock(GameObject):
     def get_effect(self):
         return self._effect
 
+    def get_effect_strength(self):
+        return self._effect_strength
+
 
 
 
 class GameMonster(GameObject):
-    def __init__(self, m_type, color, effect, behavior, start_pos):
+    def __init__(self, m_type, color, effect, behavior, start_pos, speed = 1, effect_strength = 1):
         self._type = m_type
         self._color = super()._create_color(color)
         self._effect = effect
         self._behavior = behavior
         self._previous_action = self._determine_first_action(behavior)
         self._start_pos = start_pos
+        self._speed = speed
+        self._effect_strength = effect_strength
+        self._turn = 0
 
     def _determine_first_action(self, behavior):
         return 0
@@ -282,9 +316,23 @@ class GameMonster(GameObject):
     def get_effect(self):
         return self._effect
 
+    def get_effect_strength(self):
+        return self._effect_strength
+
+    def get_speed(self):
+        return self._speed
+
     def move_action(self, location, game_map, map_size):
-        new_location = self._move_action(location, game_map, map_size)
+        new_location = location
+        self._turn += 1
+        if self._time_to_move():
+            move_factor = math.ceil(1 / self.get_speed())
+            for _ in range(0, move_factor):
+                new_location = self._move_action(new_location, game_map, map_size)
         return new_location
+
+    def _time_to_move(self):
+        return True if self._turn % math.ceil(self.get_speed()) == 0 else False
 
     def _move_action(self, location, game_map, map_size):
         new_location = ()
@@ -400,13 +448,16 @@ class GameMonster(GameObject):
 
 
 class GameItem(GameObject):
-    def __init__(self, color, effect, behavior, start_pos):
+    def __init__(self, color, effect, behavior, start_pos, respawn_time = 10, effect_strength = 1):
         self._color = super()._create_color(color)
         self._effect = effect
         self._behavior = behavior
         self._start_pos = start_pos
         self._active_item = True
         self._step_since_inactivity = 0
+        self._respawn_time = respawn_time
+        self._effect_strength = effect_strength
+        self._turn = 0
 
     def get_color(self):
         return self._color
@@ -420,7 +471,14 @@ class GameItem(GameObject):
     def get_effect(self):
         return self._effect
 
+    def get_effect_strength(self):
+        return self._effect_strength
+
+    def get_speed(self):
+        return self._respawn_time
+
     def move_action(self, location, game_map, map_size):
+        self._turn += 1
         new_location = ()
         if self._behavior == GameFeatures.ItemBehaviour.Respawn:
             if self._active_item == False:
@@ -443,7 +501,7 @@ class GameItem(GameObject):
         elif self._behavior == GameFeatures.ItemBehaviour.Respawn:
             if player_interaction == True:
                 self._active_item = False
-            elif self._step_since_inactivity >= 10:
+            elif self._step_since_inactivity >= self.get_speed():
                 self._active_item = True
         else:
             raise Exception("No such behavior exists for Items")
@@ -455,16 +513,15 @@ class GameItem(GameObject):
 
 
 
-
-
-
 class Player:
     def __init__(self, controls, survival_properties, start_pos):
         self._controls = controls 
         self._survival_properties = survival_properties
         self._start_pos = start_pos
+        self._speed = 1
         self._health = 100
         self._points = 0
+        self._turn = 0
 
     def get_controls(self):
         return self._controls
@@ -501,8 +558,28 @@ class Player:
         return [0, 1, 2, 3, 4]
 
     def move_action(self, action, location, game_map, map_size):
-        new_location = self._move_action(action, location, game_map, map_size)
+        self._turn += 1
+        if self._time_to_move() == True:
+            new_location = self._move_action(action, location, game_map, map_size)
+        else:
+            new_location = location
         return new_location
+
+    def _time_to_move(self):
+        for sur_prop in self._survival_properties:
+            if GameFeatures.SurvivalProperty.Slowdown == sur_prop["Property"]:
+                return True if self._turn % self._health_modifier(sur_prop["Strength"]) == 0 else False
+        return True
+    
+    def _health_modifier(self, factor = 1):
+        if self._health > 50:
+            return 1
+        elif self._health > 20:
+            return 2 * factor
+        elif self._health > 5:
+            return 3 * factor
+        else:
+            return 4 * factor
 
     def reaction_action(self, block, game_objects):
         self._interact_with_block(block)
@@ -516,7 +593,7 @@ class Player:
     def _interact_with_block(self, block):
         effect = block.get_effect()
         if effect == GameFeatures.BlockEffect.TakeLife:
-            self._health -= 1
+            self._health -= block.get_effect_strength()
         elif effect == GameFeatures.BlockEffect.Nothing:
             pass
         elif effect == GameFeatures.BlockEffect.Block:
@@ -529,10 +606,10 @@ class Player:
         if effect == GameFeatures.MonsterEffect.Kill:
             self._health = 0
         elif effect == GameFeatures.MonsterEffect.TakeLife:
-            self._health -= 1
+            self._health -= monster.get_effect_strength()
         elif effect == GameFeatures.MonsterEffect.GiveLife:
             if self._health < 100:
-                self._health += 1
+                self._health += monster.get_effect_strength()
         elif effect == GameFeatures.MonsterEffect.Nothing:
             pass
         else:
@@ -542,21 +619,24 @@ class Player:
         effect = item.get_effect()
         if effect == GameFeatures.ItemEffect.GiveLife:
             if self._health < 100:
-                self._health += 1
+                self._health += item.get_effect_strength()
         elif effect == GameFeatures.ItemEffect.TakeLife:
-            self._health -= 1
+            self._health -= item.get_effect_strength()
         elif effect == GameFeatures.ItemEffect.GivePoints:
-            self._points += 1
+            self._points += item.get_effect_strength()
         elif effect == GameFeatures.ItemEffect.TakePoints:
             if self._points > 0:
-                self._points -= 1
+                self._points -= item.get_effect_strength()
         elif effect == GameFeatures.ItemEffect.Nothing:
             pass
         else:
             raise Exception("No such Item effect is defines")
 
     def _health_reaction(self):
-       pass
+        for sur_prop in self._survival_properties:
+            if GameFeatures.SurvivalProperty.Starve == sur_prop["Property"]:
+                if (self._turn % sur_prop["Interval"]) == 0:
+                    self._health -= sur_prop["Strength"]
 
     def _move_action(self, action, location, game_map, map_size):
         new_location = ()

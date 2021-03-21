@@ -11,6 +11,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         DefaultMap1 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
         DefaultMap2 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
         DefaultMap3 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXOXnXXXXXXXXXXXXOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
+        DefaultMap4 = "XOOOOOOOOOOOOXnOXOOOOXXOOOOXOnOOXOOOOOOOOXOOnOOOXOOOOOOXOOOnOOOOXOOOOXOOOOnOOOOOOOOOOOOOOnOXOOOOOOOOOOXOnOXOOOOOOOOOOXOnOOOOOOOOOOOOOOnOOOOXOOOOXOOOOnOOOXOOOOOOXOOOnOOXOOOOOOOOXOOnOXOOOOOOOOOOXOnXOOOOOOOOOOOOXn"
         Empty14x14 =  "OOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOn"
 
     class MonsterColor:
@@ -24,8 +25,10 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
     class MonsterEffect:
         Kill = "Kill"
         TakeLife = "TakeLife"
+        TakePoints = "TakePoints"
         Nothing = "Nothing"
         GiveLife = "GiveLife"
+        GivePoints = "GivePoints"
 
     class MonsterType:
         Invincible = "Invincible"
@@ -53,6 +56,9 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         Nothing = "Nothing"
         Block = "Block"
         TakeLife = "TakeLife"
+        GiveLife = "GiveLife"
+        TakePoints = "TakePoints"
+        GivePoints = "GivePoints"
 
     class ItemColor:
         White = "White"
@@ -337,6 +343,8 @@ class GameMonster(GameObject):
         return new_location
 
     def _time_to_move(self):
+        if self.get_speed() == 0:
+            return False
         return True if self._turn % math.ceil(self.get_speed()) == 0 else False
 
     def _move_action(self, location, game_map, map_size):
@@ -599,6 +607,14 @@ class Player:
         effect = block.get_effect()
         if effect == GameFeatures.BlockEffect.TakeLife:
             self._health -= block.get_effect_strength()
+        elif effect == GameFeatures.BlockEffect.GiveLife:
+            if self._health < 100:
+                self._health += block.get_effect_strength()
+        elif effect == GameFeatures.BlockEffect.TakePoints:
+            if self._points > 0:
+                self._points -= block.get_effect_strength()
+        elif effect == GameFeatures.BlockEffect.GivePoints:
+            self._points += block.get_effect_strength()
         elif effect == GameFeatures.BlockEffect.Nothing:
             pass
         elif effect == GameFeatures.BlockEffect.Block:
@@ -615,6 +631,11 @@ class Player:
         elif effect == GameFeatures.MonsterEffect.GiveLife:
             if self._health < 100:
                 self._health += monster.get_effect_strength()
+        elif effect == GameFeatures.MonsterEffect.TakePoints:
+            if self._points > 0:
+                self._points -= monster.get_effect_strength()
+        elif effect == GameFeatures.MonsterEffect.GivePoints:
+            self._points += monster.get_effect_strength()
         elif effect == GameFeatures.MonsterEffect.Nothing:
             pass
         else:

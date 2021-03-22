@@ -80,7 +80,7 @@ class Environment:
         if verbose == 2:
             self._window = self._create_layout(window_size)
             self._window_size = window_size
-        self._model = behaviour_model(self._get_game_goals)
+        self._model = behaviour_model(self._get_game_goals(features))
         self._name = name
         self._verbose = verbose
         self._player = self._create_player(features)
@@ -97,6 +97,9 @@ class Environment:
     def _create_player(self, features):
         start_pos = features.get_start_position()
         return {"Object": Player(features.get_controls(), features.get_survival_properties(), start_pos), "Location": start_pos, "Start Location": start_pos}
+
+    def _get_game_goals(self, features):
+        return features.get_goals()
 
     def _get_game_map(self, features):
         return features.get_map()
@@ -115,17 +118,13 @@ class Environment:
 
     def step(self):
         print("Step from " + self._name)
-        self._move_player()
-        self._move_game_objects()
-        self._game_react()
-
-    def _move_player(self):
         game_state = self._get_game_state()
-        feasible_actions =  self._get_feasible_actions()
-        action = self._model.action(game_state, feasible_actions)
-        self._perform_action(action)
+        action_inputs =  self._get_action_inputs()
+        action = self._model.action(game_state, action_inputs)
+        self._game_react(action)
+        
     
-    def _get_feasible_actions(self):
+    def _get_action_inputs(self):
         return self._player["Object"].get_feasible_controls(self._game_map_size, self._player["Location"])
 
     def _perform_action(self, action):
@@ -135,7 +134,9 @@ class Environment:
         for obj in self._game_objects:
             obj["Location"] = obj["Object"].move_action(obj["Location"], self._game_map, self._game_map_size)
 
-    def _game_react(self):
+    def _game_react(self, action):
+        self._perform_action(action)
+        self._move_game_objects()
         self._player_react()
         self._game_object_react()
 
@@ -175,11 +176,12 @@ class Environment:
         return self._name
 
     def _get_game_state(self):
+        player_survival_time = self._player["Object"].get_survival_time()
         player_health = self._player["Object"].get_health()
         player_points = self._player["Object"].get_points()
         player_coordinate = self._player["Location"]
         map_view = self._map_view_layered()
-        return [player_health, player_points, player_coordinate, map_view]
+        return [player_survival_time, player_health, player_points, player_coordinate, map_view]
 
     def _map_view_layered(self):
         new_map = self._color_map_copy

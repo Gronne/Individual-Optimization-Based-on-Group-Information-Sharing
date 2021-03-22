@@ -46,6 +46,8 @@ class SetupFiles:
         SS13_map_setup = { "X": {"Color": GF.BlockColor.Blue, "Effect": GF.BlockEffect.Block}, 
                            "O": {"Color": GF.BlockColor.Red, "Effect": GF.BlockEffect.Nothing} }
 
+        goals = [GF.GoalSystem.Time, GF.GoalSystem.Resources, GF.GoalSystem.Safety]
+
         f1 = GF()
         f1.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
         f1.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
@@ -54,6 +56,7 @@ class SetupFiles:
         f1.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(13, 8)], speed=1, effect_strength=1)
         f1.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 3)], speed=1, effect_strength=1)
         f1.add_start_position((3, 3))
+        f1.add_goals(goals)
 
         f2 = GF()
         f2.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
@@ -66,6 +69,7 @@ class SetupFiles:
         f2.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 3)], speed=1, effect_strength=1)
         f2.add_block(GF.BlockColor.Green, GF.BlockEffect.GiveLife, [(11, 8)], effect_strength=1)
         f2.add_start_position((3, 3))
+        f2.add_goals(goals)
 
         f3 = GF()
         f3.add_map_layout(GF.MapLayout.DefaultMap3, SS1_map_setup)
@@ -75,6 +79,7 @@ class SetupFiles:
         f3.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(11, 13)], speed=1, effect_strength=1)
         f3.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(12, 10)], speed=1, effect_strength=1)
         f3.add_start_position((3, 3))
+        f3.add_goals(goals)
 
         f4 = GF()
         f4.add_map_layout(GF.MapLayout.DefaultMap3, SS1_map_setup)
@@ -85,6 +90,7 @@ class SetupFiles:
         f4.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(11, 5)], speed=1, effect_strength=1)
         f4.add_block(GF.BlockColor.Red, GF.BlockEffect.TakeLife, [(3, 11), (9, 3), (12, 6), (13, 8), (13, 9)], effect_strength=1)
         f4.add_start_position((3, 3))
+        f4.add_goals(goals)
 
         f5 = GF()
         f5.add_map_layout(GF.MapLayout.DefaultMap1, SS12_map_setup)
@@ -93,6 +99,7 @@ class SetupFiles:
         f5.add_block(GF.BlockColor.Green, GF.BlockEffect.TakeLife, [(5, 6), (3, 12), (12, 3), (9, 9)], 1)
         f5.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.White, GF.MonsterEffect.GivePoints, GF.MonsterBehaviour.DiagonalRight, [(11, 7), (4, 11)], 2, 1)
         f5.add_start_position((3, 4))
+        f5.add_goals(goals)
 
         f6 = GF()
         f6.add_map_layout(GF.MapLayout.DefaultMap4, SS13_map_setup)
@@ -100,6 +107,6 @@ class SetupFiles:
         f6.add_item(GF.ItemColor.Yellow, GF.ItemEffect.TakeLife, GF.ItemBehaviour.Nothing, [(2, 5), (2, 9), (2, 10), (3, 6), (5, 6), (7, 5), (7, 8), (8, 10), (9, 5), (9, 12), (10, 7), (10, 12), (11, 12), (12, 9), (14, 8)], 1, 25)
         f6.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.Nothing, GF.MonsterBehaviour.Nothing, [(6, 4), (6, 11), (7, 7), (8, 8), (9, 4)], 0, 0)
         f6.add_block(GF.BlockColor.Green, GF.BlockEffect.Nothing, [(3, 7), (3, 8), (12, 7), (12, 8), (7, 3), (8, 3), (7, 12), (8, 12)], 0)
-
+        f6.add_goals(goals)
 
         return [f2, f1, f2, f3, f4, f5, f6]

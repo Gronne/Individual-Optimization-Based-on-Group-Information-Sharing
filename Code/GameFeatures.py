@@ -11,7 +11,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         DefaultMap1 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
         DefaultMap2 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
         DefaultMap3 = "XXXXXXXXXXXXXXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXOXnXXXXXXXXXXXXOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXOOOOOOOOOOOOXnXXXXXXXXXXXXXXn"
-        DefaultMap4 = "XOOOOOOOOOOOOXnOXOOOOXXOOOOXOnOOXOOOOOOOOXOOnOOOXOOOOOOXOOOnOOOOXOOOOXOOOOnOOOOOOOOOOOOOOnOXOOOOOOOOOOXOnOXOOOOOOOOOOXOnOOOOOOOOOOOOOOnOOOOXOOOOXOOOOnOOOXOOOOOOXOOOnOOXOOOOOOOOXOOnOXOOOOOOOOOOXOnXOOOOOOOOOOOOXn"
+        DefaultMap4 = "XOOOOOOOOOOOOXnOXOOOOXXOOOOXOnOOXOOOOOOOOXOOnOOOXOOOOOOXOOOnOOOOXOOOOXOOOOnOOOOOOOOOOOOOOnOXOOOOOOOOOOXOnOXOOOOOOOOOOXOnOOOOOOOOOOOOOOnOOOOXOOOOXOOOOnOOOXOOOOOOXOOOnOOXOOOOOOOOXOOnOXOOOOXXOOOOXOnXOOOOOOOOOOOOXn"
         Empty14x14 =  "OOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOnOOOOOOOOOOOOOOn"
 
     class MonsterColor:
@@ -80,8 +80,9 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
         Respawn = "Respawn"
 
     class GoalSystem:
-        Point = "IncreasePoints"
-        Time = "LongLife"  
+        Time = "MaximizeSurvivalTime"  
+        Resources = "MaximizeResources"
+        Safety = "MaximizeSafetyAndComfort"     #Minimize how much the agent move around
     
     class SurvivalProperty:
         Starve = "Starvation"
@@ -96,7 +97,7 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
                             "Items": [],
                             "Map Size": (0, 0),
                             "Control": GameFeatures.Controls.AllArrows,
-                            "Goals": [GameFeatures.GoalSystem.Point],
+                            "Goals": [],
                             "Survival": []}
         self.add_survival_property(GameFeatures.SurvivalProperty.Nothing)
 
@@ -134,8 +135,11 @@ class GameFeatures:     #feature.add_controls(GameFeatures.Controls.)
     def add_item(self, color, effect, behaviour, locations, respawn_time = 10, effect_strength=1):  #Multiple 
         self._features["Items"] += [ {"Object": GameItem(color, effect, behaviour, location, respawn_time, effect_strength), "Location": location, "Start Location": location} for location in locations]
 
-    def add_goal(self, point_type):
-        self._features["Goals"] += [point_type]
+    def add_goals(self, goals):
+        if isinstance(goals, list):
+            self._features["Goals"] += goals
+        else:
+            self._features["Goals"] += [goals]
 
     def add_survival_property(self, s_type, interval = 10, strength = 1):
         self._features["Survival"] += [{"Property": s_type, "Interval": interval, "Strength": strength}]
@@ -535,6 +539,10 @@ class Player:
         self._health = 100
         self._points = 0
         self._turn = 0
+        self._survival_time = 0
+
+    def get_survival_time(self):
+        return self._survival_time
 
     def get_controls(self):
         return self._controls
@@ -548,6 +556,7 @@ class Player:
     def kill_player(self):
         self._health = 100
         self._points = 0
+        self._survival_time = 0
     
     def get_feasible_controls(self, map_size, location):
         feasible_controls = []
@@ -572,6 +581,7 @@ class Player:
 
     def move_action(self, action, location, game_map, map_size):
         self._turn += 1
+        self._survival_time += 1
         if self._time_to_move() == True:
             new_location = self._move_action(action, location, game_map, map_size)
         else:

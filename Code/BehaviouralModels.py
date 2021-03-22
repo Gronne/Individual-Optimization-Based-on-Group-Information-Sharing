@@ -20,7 +20,7 @@ class BehaviouralModelInterface:
         if GF.GoalSystem.Resources in self._goals:
             score += resources * 10
         if GF.GoalSystem.Safety in self._goals:
-            score += self._coordinate_variance(coordinate, 10) * 1
+            score += (1 / self._coordinate_variance(coordinate, 10)) * 1
         return score
 
     def _coordinate_variance(self, new_coor, filter_size):

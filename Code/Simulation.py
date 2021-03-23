@@ -1,5 +1,5 @@
 #------------------ Libraries -----------------
-from Environments import *
+from Simulations.Environments import *
 from BehaviouralModels.BehaviouralModels import *
 from GameSetupFiles import SetupFiles
 

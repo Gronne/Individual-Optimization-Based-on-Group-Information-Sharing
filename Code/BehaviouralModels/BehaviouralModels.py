@@ -1,6 +1,6 @@
 import random
 import numpy as NP
-from GameFeatures import GameFeatures as GF
+from Simulations.GameFeatures import GameFeatures as GF
 
 class BehaviouralModelInterface:
     def __init__(self, goals):

@@ -1,10 +1,10 @@
-import cv2 
+import cv2
 import numpy as np
 import math
 import time
 
-from GameFeatures import *
-from Visualizers import *
+from Simulations.GameFeatures import *
+from Simulations.Visualizers import *
 
 
 class EnvironmentSuit:
@@ -40,15 +40,15 @@ class EnvironmentSuit:
 
     def run(self, simulation_delay = 1000):
         running_sim = True
-        while True:  
+        while True:
             if running_sim == True:
                 self._update_environments()
                 self._simulation_delay(simulation_delay)
             k_input = self._get_keyboard_input()
             if self._quite_input == k_input:
-                break       
+                break
             elif self._speed_up == k_input:
-                simulation_delay /= 2      
+                simulation_delay /= 2
             elif self._speed_down == k_input:
                 simulation_delay *= 2
             elif self._start_input == k_input:
@@ -61,7 +61,7 @@ class EnvironmentSuit:
         for environment in self.environments:
             environment.step()
             environment.print()
-    
+
     def _simulation_delay(self, simulation_delay):
         time.sleep(simulation_delay/1000)
 
@@ -106,7 +106,7 @@ class Environment:
 
     def _get_game_map_size(self, features):
         return features.get_map_size()
-    
+
     def _get_game_objects(self, features):
         list_of_monsters = features.get_monsters()
         list_of_items = features.get_items()
@@ -122,8 +122,8 @@ class Environment:
         action_inputs =  self._get_action_inputs()
         action = self._model.action(game_state, action_inputs)
         self._game_react(action)
-        
-    
+
+
     def _get_action_inputs(self):
         return self._player["Object"].get_feasible_controls(self._game_map_size, self._player["Location"])
 
@@ -151,7 +151,7 @@ class Environment:
         if self._player["Object"].get_health() == 0:
             self._player["Object"].kill_player()
             self._player["Location"] = self._player["Start Location"]
-    
+
     def _game_object_react(self):
         for game_object in self._game_objects:
             obj_coor = game_object["Location"]
@@ -203,13 +203,3 @@ class Environment:
             colors = [block_color, block_color, block_color]
             color_map += [colors]
         return color_map
-
-
-
-
-
-
-
-
-
-    

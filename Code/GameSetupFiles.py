@@ -1,9 +1,9 @@
-from Environments import *
-from GameFeatures import GameFeatures as GF
+from Simulations.Environments import *
+from Simulations.GameFeatures import GameFeatures as GF
 
 class SetupFiles:
     def first_features():
-        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block},
               "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing} }
 
         f1 = GF()
@@ -37,13 +37,13 @@ class SetupFiles:
 
 
     def project_features():
-        SS1_map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+        SS1_map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block},
                           "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing} }
 
-        SS12_map_setup = { "X": {"Color": GF.BlockColor.Red, "Effect": GF.BlockEffect.Block}, 
+        SS12_map_setup = { "X": {"Color": GF.BlockColor.Red, "Effect": GF.BlockEffect.Block},
                            "O": {"Color": GF.BlockColor.Blue, "Effect": GF.BlockEffect.Nothing} }
 
-        SS13_map_setup = { "X": {"Color": GF.BlockColor.Blue, "Effect": GF.BlockEffect.Block}, 
+        SS13_map_setup = { "X": {"Color": GF.BlockColor.Blue, "Effect": GF.BlockEffect.Block},
                            "O": {"Color": GF.BlockColor.Red, "Effect": GF.BlockEffect.Nothing} }
 
         goals = [GF.GoalSystem.Time, GF.GoalSystem.Resources, GF.GoalSystem.Safety]

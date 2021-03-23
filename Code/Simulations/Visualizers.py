@@ -1,7 +1,7 @@
 import math
 import cv2
 
-from GameFeatures import *
+from Simulations.GameFeatures import *
 
 class GameVisualizer:
     def _visualize_game(window, name, window_size, game_map_size, player, game_map, game_objects):

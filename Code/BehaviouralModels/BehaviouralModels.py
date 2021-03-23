@@ -37,3 +37,20 @@ class BehaviouralModelInterface:
             self._coordinate_history += [[new_coor[0], new_coor[1]]]
         else:
             self._coordinate_history = self._coordinate_history[1:] + [[new_coor[0], new_coor[1]]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Nothing

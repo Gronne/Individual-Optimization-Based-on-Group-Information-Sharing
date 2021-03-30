@@ -39,7 +39,7 @@ class DeepReinforcementLearning(BehaviouralModelInterface):
         self._previous_state = None
         self._previous_prediction = None
         self._epsilon = 1
-        self._epsilon_decay = 0.99975
+        self._epsilon_decay = 0.9975    #0.99975 before
 
         #Main model - Get trained every step
         self._main_model = self._build_model_conv(initial_game_state, feasible_actions)
@@ -55,7 +55,7 @@ class DeepReinforcementLearning(BehaviouralModelInterface):
 
 
     def _build_model(self, game_state, feasible_actions):  
-        first_layer_size = (len(game_state)-1+1) + len(game_state[-1])*3*3      #3 colors in our layers at X pixels + extra info
+        first_layer_size = (len(game_state)) + len(game_state[-1])*3*3      #3 colors in our layers at X pixels + extra info
                                                                                 #Should probably use cnn...
         model = models.Sequential()
         model.add(tensorflow.keras.Input(shape=(first_layer_size,), name="digits")) #Input  layer
@@ -73,7 +73,7 @@ class DeepReinforcementLearning(BehaviouralModelInterface):
 
 
     def _build_model_conv(self, game_state, feasible_actions):
-        inputA = tensorflow.keras.Input(shape=((len(game_state)-1+1),)) #User info
+        inputA = tensorflow.keras.Input(shape=((len(game_state)-1),)) #User info
         inputB_1 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - first layer
         inputB_2 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - second layer
         inputB_3 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - third layer
@@ -248,7 +248,7 @@ class DeepReinforcementLearning(BehaviouralModelInterface):
         life = game_state[1] / 100  #Normalize
         points = game_state[2]      #Should this be normalized?
         player_coor = (game_state[3][0]/len(game_state[-1]), game_state[3][1]/len(game_state[-1][0])) #Normalize
-        model_state_attr = [steps, life, points, player_coor[0], player_coor[1]]
+        model_state_attr = [life, points, player_coor[0], player_coor[1]]
         
         image_shape = (len(game_state[-1]), len(game_state[-1][0]), len(game_state[-1][0][0][0]))
         

@@ -198,6 +198,9 @@ class GameObject:
             raise Exception(color_str + " color does not exist for Blocks")
         return new_color
 
+    def reset(self):
+        pass
+
     def _possible_to_move_left(self, location, game_map, map_size):
         move_out_of_bound = location[1] > 1
         if move_out_of_bound == True:
@@ -317,6 +320,9 @@ class GameMonster(GameObject):
         self._start_pos = start_pos
         self._speed = speed
         self._effect_strength = effect_strength
+        self._turn = 0
+
+    def reset(self):
         self._turn = 0
 
     def _determine_first_action(self, behavior):
@@ -474,6 +480,11 @@ class GameItem(GameObject):
         self._step_since_inactivity = 0
         self._respawn_time = respawn_time
         self._effect_strength = effect_strength
+        self._turn = 0
+
+    def reset(self):
+        self._active_item = True
+        self._step_since_inactivity = 0
         self._turn = 0
 
     def get_color(self):

@@ -48,6 +48,19 @@ class SetupFiles:
 
         goals = [GF.GoalSystem.Time, GF.GoalSystem.Resources, GF.GoalSystem.Safety]
 
+        f0 = GF()
+        f0.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
+        f0.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f0.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], 30, 1)
+        f0.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], 30, 1)
+        f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 6)], speed=1, effect_strength=5)
+        f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(7, 6)], speed=1, effect_strength=1)
+        f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(13, 8)], speed=1, effect_strength=1)
+        f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 3)], speed=1, effect_strength=1)
+        f0.add_block(GF.BlockColor.Green, GF.BlockEffect.GiveLife, [(11, 8)], effect_strength=1)
+        f0.add_start_position((3, 3))
+        f0.add_goals(goals)
+
         f1 = GF()
         f1.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
         f1.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
@@ -109,4 +122,4 @@ class SetupFiles:
         f6.add_block(GF.BlockColor.Green, GF.BlockEffect.Nothing, [(3, 7), (3, 8), (12, 7), (12, 8), (7, 3), (8, 3), (7, 12), (8, 12)], 0)
         f6.add_goals(goals)
 
-        return [f2, f1, f2, f3, f4, f5, f6]
+        return [f0, f1, f2, f3, f4, f5, f6]

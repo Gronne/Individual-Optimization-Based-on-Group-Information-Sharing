@@ -10,11 +10,13 @@ from Simulations.Visualizers import *
 class EnvironmentSuit:
     def __init__(self, nr_of_env, behaviour_model, step_size = 1,variation = 0, distribution = 0, features = None, verbose = 1 ):      #createEnvironments
         self.environments = self._create_environments(nr_of_env, behaviour_model, step_size, variation, distribution, features, verbose)
-        self._quite_input = 113 # 'q'
-        self._speed_up = 43     # '+'
-        self._speed_down = 45   # '-'
-        self._start_input = 115 # 's'
-        self._pause_input = 112 # 'p'
+        self._print_flag = True
+        self._quite_input = 113  # 'q'
+        self._speed_up = 43      # '+'
+        self._speed_down = 45    # '-'
+        self._start_input = 115  # 's'
+        self._pause_input = 112  # 'p'
+        self._print_toggle = 118 # 'v'
 
     def _create_environments(self, nr_of_env, behaviour_model, step_size, variation, distribution, env_features_list, verbose):
         if env_features_list == None:
@@ -55,12 +57,15 @@ class EnvironmentSuit:
                 running_sim = True
             elif self._pause_input == k_input:
                 running_sim = False
+            elif self._print_toggle == k_input:
+                self._print_flag = not self._print_flag
         self._shutdown_environments()
 
     def _update_environments(self):
         for environment in self.environments:
             environment.step()
-            environment.print()
+            if self._print_flag == True:
+                environment.print()
 
     def _simulation_delay(self, simulation_delay):
         time.sleep(simulation_delay/1000)
@@ -80,7 +85,7 @@ class Environment:
         if verbose == 2:
             self._window = self._create_layout(window_size)
             self._window_size = window_size
-        self._model = behaviour_model(self._get_game_goals(features))
+        self._original_features = features
         self._name = name
         self._verbose = verbose
         self._player = self._create_player(features)
@@ -88,6 +93,7 @@ class Environment:
         self._game_map_size = self._get_game_map_size(features)
         self._game_objects = self._get_game_objects(features)
         self._color_map_copy = self._create_color_block_map()
+        self._model = behaviour_model(self._get_game_goals(features), self._get_game_state(), self._get_action_inputs())
 
     def _create_layout(self, window_size):
         img = np.zeros([window_size[0], window_size[1], 3],dtype=np.uint8)  #Square window
@@ -120,7 +126,7 @@ class Environment:
         print("Step from " + self._name)
         game_state = self._get_game_state()
         action_inputs =  self._get_action_inputs()
-        action = self._model.action(game_state, action_inputs)
+        action = self._model.action(game_state)
         self._game_react(action)
 
 
@@ -150,7 +156,13 @@ class Environment:
     def _react_on_player_status(self):
         if self._player["Object"].get_health() == 0:
             self._player["Object"].kill_player()
-            self._player["Location"] = self._player["Start Location"]
+            self._reset_environment()
+
+    def _reset_environment(self):   #Respawn player, respawn items
+        self._player["Location"] = self._player["Start Location"]
+        for obj in self._game_objects:
+            obj["Object"].reset()
+            obj["Location"] = obj["Start Location"]
 
     def _game_object_react(self):
         for game_object in self._game_objects:
@@ -185,21 +197,29 @@ class Environment:
 
     def _map_view_layered(self):
         new_map = self._color_map_copy
-        for game_object in self._game_objects:
+        for game_object in self._game_objects:  #First set monsters
             coor = game_object["Location"]
-            map_index = (coor[0]-1) * self._game_map_size[0] + coor[1] - 1
             obj = game_object["Object"]
             if isinstance(obj, GameMonster):
-                new_map[map_index][1] = obj.get_color()
-            elif isinstance(obj, GameItem):
-                new_map[map_index][2] = obj.get_color()
+                new_map[coor[0]-1][coor[1]-1][1] = obj.get_color()
+                new_map[coor[0]-1][coor[1]-1][2] = obj.get_color()
+        for game_object in self._game_objects:  #Then set items - To get the right color combination
+            coor = game_object["Location"]
+            obj = game_object["Object"]
+            if isinstance(obj, GameItem):
+                new_map[coor[0]-1][coor[1]-1][2] = obj.get_color()
         return new_map
 
-    def _create_color_block_map(self):
+    def _create_color_block_map(self):      #Remember to make the map 2D!!!!!!!!!!!!!
         coordinate_list = [(coor_h, coor_w) for coor_h in range(1, self._game_map_size[0]+1) for coor_w in range(1, self._game_map_size[1]+1)]
         color_map = []
-        for coor in coordinate_list:
+        color_list = []
+        for index, coor in enumerate(coordinate_list):
+            if index % self._game_map_size[0] == 0 and index != 0:
+                color_map += [color_list]
+                color_list = []
             block_color = self._game_map[coor]["Object"].get_color()
             colors = [block_color, block_color, block_color]
-            color_map += [colors]
+            color_list += [colors]
+        color_map += [color_list]
         return color_map

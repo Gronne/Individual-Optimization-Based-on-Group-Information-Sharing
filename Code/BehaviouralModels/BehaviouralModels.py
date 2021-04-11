@@ -23,6 +23,7 @@ class BehaviouralModelInterface:
             score += resources * 1
         if GF.GoalSystem.Safety in self._goals:
             score += (1 / self._coordinate_variance(coordinate, 10)) * 0.1
+        if score == 0: score = 0.00001
         normalized_score = 1 - (1/score)
         if normalized_score < 0:
             normalized_score = 0

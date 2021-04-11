@@ -46,7 +46,7 @@ class SetupFiles:
         SS13_map_setup = { "X": {"Color": GF.BlockColor.Blue, "Effect": GF.BlockEffect.Block},
                            "O": {"Color": GF.BlockColor.Red, "Effect": GF.BlockEffect.Nothing} }
 
-        goals = [GF.GoalSystem.Time, GF.GoalSystem.Resources, GF.GoalSystem.Safety]
+        goals = [GF.GoalSystem.Time, GF.GoalSystem.Resources]   #, GF.GoalSystem.Safety
 
         f0 = GF()
         f0.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)

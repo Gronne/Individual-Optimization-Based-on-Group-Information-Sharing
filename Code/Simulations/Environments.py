@@ -68,7 +68,7 @@ class EnvironmentSuit:
                 environment.print()
 
     def _simulation_delay(self, simulation_delay):
-        time.sleep(simulation_delay/1000)
+        pass #time.sleep(simulation_delay/1000)
 
     def _get_keyboard_input(self):
         keyPress = cv2.waitKey(1)

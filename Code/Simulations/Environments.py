@@ -123,7 +123,6 @@ class Environment:
         return features.get_goals()
 
     def step(self):
-        print("Step from " + self._name)
         game_state = self._get_game_state()
         action_inputs =  self._get_action_inputs()
         action = self._model.action(game_state)
@@ -154,7 +153,7 @@ class Environment:
         self._react_on_player_status()
 
     def _react_on_player_status(self):
-        if self._player["Object"].get_health() == 0:
+        if self._player["Object"].get_health() <= 0:
             self._player["Object"].kill_player()
             self._reset_environment()
 

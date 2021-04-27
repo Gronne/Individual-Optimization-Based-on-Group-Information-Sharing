@@ -2,6 +2,23 @@ from Simulations.Environments import *
 from Simulations.GameFeatures import GameFeatures as GF
 
 class SetupFiles:
+    def simple_features():
+        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+                      "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing}}
+
+        features = GF()
+        features.add_map_layout(GF.MapLayout.SimpleMap, map_setup)
+        features.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        features.add_start_position((2, 7))
+        features.add_controls(GF.Controls.LeftRight)
+        features.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(2, 2), (2, 8), (2, 13)], effect_strength=1, respawn_time=20)
+        features.add_goals([GF.GoalSystem.Resources])
+
+        return [features]
+
+
+
+
     def first_features():
         map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block},
               "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing} }
@@ -51,8 +68,8 @@ class SetupFiles:
         f0 = GF()
         f0.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
         f0.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
-        f0.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], 30, 1)
-        f0.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], 30, 1)
+        f0.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], respawn_time=30, effect_strength=1)
+        f0.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], respawn_time=30, effect_strength=2)
         f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 6)], speed=1, effect_strength=5)
         f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(7, 6)], speed=1, effect_strength=1)
         f0.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(13, 8)], speed=1, effect_strength=1)
@@ -64,8 +81,8 @@ class SetupFiles:
         f1 = GF()
         f1.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
         f1.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
-        f1.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], 30, 1)
-        f1.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], 30, 1)
+        f1.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], respawn_time=30, effect_strength=1)
+        f1.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], respawn_time=30, effect_strength=2)
         f1.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(13, 8)], speed=1, effect_strength=1)
         f1.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 3)], speed=1, effect_strength=1)
         f1.add_start_position((3, 3))
@@ -74,8 +91,8 @@ class SetupFiles:
         f2 = GF()
         f2.add_map_layout(GF.MapLayout.DefaultMap2, SS1_map_setup)
         f2.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
-        f2.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], 30, 1)
-        f2.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], 30, 1)
+        f2.add_item(GF.ItemColor.Yellow, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(3, 12), (5, 5), (7, 9), (10, 13)], respawn_time=30, effect_strength=1)
+        f2.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(2, 2), (4, 12), (11, 4), (13, 9)], respawn_time=30, effect_strength=2)
         f2.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(12, 6)], speed=1, effect_strength=5)
         f2.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(7, 6)], speed=1, effect_strength=1)
         f2.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(13, 8)], speed=1, effect_strength=1)
@@ -87,8 +104,8 @@ class SetupFiles:
         f3 = GF()
         f3.add_map_layout(GF.MapLayout.DefaultMap3, SS1_map_setup)
         f3.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
-        f3.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (13, 2), (2, 13), (8, 13)], 40, 1)
-        f3.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(4, 6), (5, 7), (11, 7), (10, 9), (9, 2)], 40, 1)
+        f3.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (13, 2), (2, 13), (8, 13)], respawn_time=40, effect_strength=1)
+        f3.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(4, 6), (5, 7), (11, 7), (10, 9), (9, 2)], respawn_time=40, effect_strength=2)
         f3.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(11, 13)], speed=1, effect_strength=1)
         f3.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(12, 10)], speed=1, effect_strength=1)
         f3.add_start_position((3, 3))
@@ -97,8 +114,8 @@ class SetupFiles:
         f4 = GF()
         f4.add_map_layout(GF.MapLayout.DefaultMap3, SS1_map_setup)
         f4.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
-        f4.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (13, 2), (2, 13), (8, 13)], 40, 1)
-        f4.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(4, 6), (5, 7), (11, 7), (10, 9), (9, 2)], 40, 1)
+        f4.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (13, 2), (2, 13), (8, 13)], respawn_time=40, effect_strength=1)
+        f4.add_item(GF.ItemColor.Green, GF.ItemEffect.GiveLife, GF.ItemBehaviour.Respawn, [(4, 6), (5, 7), (11, 7), (10, 9), (9, 2)], respawn_time=40, effect_strength=2)
         f4.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.LeftRight, [(2, 9), (10, 10)], speed=1, effect_strength=1)
         f4.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Black, GF.MonsterEffect.TakeLife, GF.MonsterBehaviour.UpDown, [(11, 5)], speed=1, effect_strength=1)
         f4.add_block(GF.BlockColor.Red, GF.BlockEffect.TakeLife, [(3, 11), (9, 3), (12, 6), (13, 8), (13, 9)], effect_strength=1)

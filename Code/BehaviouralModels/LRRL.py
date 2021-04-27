@@ -10,33 +10,50 @@ from Simulations.GameFeatures import GameFeatures as GF
 from BehaviouralModels.BehaviouralModels import BehaviouralModelInterface
 
 
-MIN_REPLAY_MEMORY_SIZE = 4_096
-MAX_REPLAY_MEMORY_SIZE = 4_096
-MINIBATCH_SIZE = 4_096                 #Affect how many states it will use to fit
+MIN_REPLAY_MEMORY_SIZE = 16_384
+MAX_REPLAY_MEMORY_SIZE = 16_384
+MINIBATCH_SIZE = 16_384                 #Affect how many states it will use to fit
 
 DISCOUNT = 0.99
 
 
 class IndiLRRL(BehaviouralModelInterface):
-    def __init__(self, goals, initial_game_state, feasible_actions): 
-        super().__init__(goals, initial_game_state, feasible_actions)
+    def __init__(self, goals, initial_game_state, feasible_actions, model_addr, results_addr): 
+        super().__init__(goals, initial_game_state, feasible_actions, results_addr)
+        self._create_directory(self._model_addr)
         self._previous_action = None
         self._previous_state = None
         self._previous_game = None
         self._previous_score = 0
-        self._replay_memory = deque(maxlen=MAX_REPLAY_MEMORY_SIZE)
         self._turn_count = 0
 
-        self._epsilon = 1
-        self._epsilon_decay = 0.9975    #0.99975 before
+        if self._get_file_size(self._model_addr + ".txt"):
+            #Load
+            self._regressions, self._epsilon = self._load_model()
+        else:
+            #Create
+            #Setup regression - One for each action's score
+            model_state = self._game_to_model_state(initial_game_state)
+            rand_vals = np.random.uniform(low=-1, high=1, size=(len(feasible_actions)))
+            self._regressions = LinearRegression().fit([model_state], [rand_vals])
+            #Set epsilon
+            self._epsilon = 1
 
+        self._epsilon_decay = 0.9995    #0.99975 before
         self._terminal_count = 0
+        #Setup memory for last N states
+        self._replay_memory = deque(maxlen=MAX_REPLAY_MEMORY_SIZE)
 
-        #One for prediction each action's score
-        model_state = self._game_to_model_state(initial_game_state)
-        rand_vals = np.random.uniform(low=-1, high=1, size=(len(feasible_actions)))
-        self._regressions = LinearRegression().fit([model_state], [rand_vals])
 
+    def get_epsilon(self):
+        return self._epsilon
+
+    def _load_model(self):
+        print("#####LOAD MODEL#####")
+
+    def save_model(self):
+        coefficients = self._regressions.get_params()
+        print(coefficients)
 
     def action(self, game_state):
         self._turn_count += 1
@@ -45,10 +62,10 @@ class IndiLRRL(BehaviouralModelInterface):
         model_state = self._game_to_model_state(game_state)
 
         if self._turn_count % 100 == 0:
-            if self._turn_count > MINIBATCH_SIZE:
+            if self._turn_count > MINIBATCH_SIZE and self._turn_count % 500 == 0:
                 self._epsilon *= self._epsilon_decay
+                print(f"Epsilon: {self._epsilon}")
             print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
-            print(f"Epsilon: {self._epsilon}")
 
         if isinstance(self._previous_state, np.ndarray):
             terminal_state = game_state[0] == 0 or model_state[0] != self._previous_state[0] or game_state[2] != self._previous_game[2] #If dead, different health, or different points
@@ -91,7 +108,7 @@ class IndiLRRL(BehaviouralModelInterface):
         return index
 
     def _train(self, terminal_state, step):
-        if len(self._replay_memory) < MIN_REPLAY_MEMORY_SIZE or self._terminal_count % 10 != 0 or not terminal_state:
+        if len(self._replay_memory) < MIN_REPLAY_MEMORY_SIZE or self._terminal_count % 50 != 0 or not terminal_state:
             return
         print(f"Training at step: {self._turn_count}")
         minibatch = self._replay_memory
@@ -107,7 +124,7 @@ class IndiLRRL(BehaviouralModelInterface):
 
         for index, (current_state, new_current_state, action, reward, done, life_changer) in enumerate(minibatch):
             if done:
-                new_q = -1  #reward
+                new_q = -10  #reward
             elif life_changer:
                 new_q = reward
             else:
@@ -138,24 +155,29 @@ class IndiLRRL(BehaviouralModelInterface):
 class GroupLRRL(BehaviouralModelInterface):
     _replay_memory = deque(maxlen=MAX_REPLAY_MEMORY_SIZE)
     _global_training_count = 0
+    _global_instances = 0
+    _regressions = None
+    _epsilon = 1
+    _epsilon_decay = 0.9995    #0.99975 before
 
-    def __init__(self, goals, initial_game_state, feasible_actions): 
-        super().__init__(goals, initial_game_state, feasible_actions)
+    def __init__(self, goals, initial_game_state, feasible_actions, model_addr, results_addr): 
+        super().__init__(goals, initial_game_state, feasible_actions, results_addr)
+        self._create_directory(self._model_addr)
         self._previous_action = None
         self._previous_state = None
         self._previous_game = None
         self._previous_score = 0
         self._turn_count = 0
 
-        self._epsilon = 1
-        self._epsilon_decay = 0.9975    #0.99975 before
-
         self._terminal_count = 0
 
+        GroupLRRL._global_instances += 1
+
         #One for prediction each action's score
-        model_state = self._game_to_model_state(initial_game_state)
-        rand_vals = np.random.uniform(low=-1, high=1, size=(len(feasible_actions)))
-        self._regressions = LinearRegression().fit([model_state], [rand_vals])
+        if _regression == None:
+            model_state = self._game_to_model_state(initial_game_state)
+            rand_vals = np.random.uniform(low=-1, high=1, size=(len(feasible_actions)))
+            GroupLRRL._regressions = LinearRegression().fit([model_state], [rand_vals])
 
 
     def action(self, game_state):
@@ -165,10 +187,8 @@ class GroupLRRL(BehaviouralModelInterface):
         model_state = self._game_to_model_state(game_state)
 
         if self._turn_count % 100 == 0:
-            if self._turn_count > MINIBATCH_SIZE:
-                self._epsilon *= self._epsilon_decay
             print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
-            print(f"Epsilon: {self._epsilon}")
+            print(f"Epsilon: {GroupLRRL._epsilon}")
 
         if isinstance(self._previous_state, np.ndarray):
             terminal_state = game_state[0] == 0 or model_state[0] != self._previous_state[0] or game_state[2] != self._previous_game[2] #If dead, different health, or different points
@@ -201,23 +221,24 @@ class GroupLRRL(BehaviouralModelInterface):
         return self._feasible_actions[action_index]
 
     def _predict(self, model_state):
-        predictions = self._regressions.predict(model_state)
+        predictions = GroupLRRL._regressions.predict(model_state)
         return predictions
 
     def _choose_action_from_prediction(self, prediction):
         index = np.argmax(prediction)
-        if np.random.random() <= self._epsilon:
+        if np.random.random() <= GroupLRRL._epsilon:
             index = np.random.randint(0, len(prediction))
         return index
 
-    def _train(self, terminal_state, step): #Right now everybody will train it - That is not effecient !!!!!!!!!!!!!!!
-        if len(GroupLRRL._replay_memory) < MIN_REPLAY_MEMORY_SIZE or self._terminal_count % 10 != 0 or not terminal_state:
+    def _train(self, terminal_state, step): 
+        if len(GroupLRRL._replay_memory) < MIN_REPLAY_MEMORY_SIZE or self._terminal_count % 50 != 0 or not terminal_state:
             return
 
         GroupLRRL._global_training_count += 1
-        if GroupLRRL._global_training_count % len(self._feasible_actions) != 0:
+        if GroupLRRL._global_training_count % GroupLRRL._global_instances != 0:
             return
 
+        GroupLRRL._epsilon *= GroupLRRL._epsilon_decay
         print(f"Training at step: {self._turn_count}")
         minibatch = GroupLRRL._replay_memory
 
@@ -232,7 +253,7 @@ class GroupLRRL(BehaviouralModelInterface):
 
         for index, (current_state, new_current_state, action, reward, done, life_changer) in enumerate(minibatch):
             if done:
-                new_q = -1  #reward
+                new_q = -10  #reward
             elif life_changer:
                 new_q = reward
             else:
@@ -245,7 +266,7 @@ class GroupLRRL(BehaviouralModelInterface):
             X += [current_state]
             y += [result]
         
-        self._regressions.fit(X, y)
+        GroupLRRL._regressions.fit(X, y)
 
 
     def _get_state_in_prediction_structure(self, minibatch, data_index):

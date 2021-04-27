@@ -1,13 +1,24 @@
 import random
+import os
 import numpy as NP
 from Simulations.GameFeatures import GameFeatures as GF
 
 class BehaviouralModelInterface:
-    def __init__(self, goals, initial_game_state, feasible_actions): 
+    def __init__(self, goals, initial_game_state, feasible_actions, result_addr): 
         self._goals = goals
         self._initial_game_state = initial_game_state
         self._feasible_actions = feasible_actions
         self._coordinate_history = []
+
+        self._result_addr = result_addr
+        self._create_directory(self._result_addr)
+
+    def _create_directory(self, addr):
+        try:
+            directory = ''.join(folder + "/" for folder in addr.split('/')[:-1])
+            os.makedirs(directory)
+        except FileExistsError:
+            pass
 
     def action(self, game_state):     #game_state = [survival_time, health, points, coordinate, map_colors]
         score = self._calculate_score(game_state[0], game_state[2], game_state[3])
@@ -27,7 +38,7 @@ class BehaviouralModelInterface:
         normalized_score = 1 - (1/score)
         if normalized_score < 0:
             normalized_score = 0
-        return normalized_score
+        return score
 
     def _coordinate_variance(self, new_coor, filter_size):
         self._add_coor_to_history(new_coor, filter_size)
@@ -45,6 +56,20 @@ class BehaviouralModelInterface:
             self._coordinate_history += [[new_coor[0], new_coor[1]]]
         else:
             self._coordinate_history = self._coordinate_history[1:] + [[new_coor[0], new_coor[1]]]
+
+    def save_model(self):
+        raise Exception("save_model() must be implemented.")
+
+    def save_result(self, survival_time, points, epsilon):
+        with open(self._result_addr + ".txt", "a+") as file:
+            file.write(f"SurvivalTime:{survival_time},Points:{points},Epsilon:{epsilon}\n")
+
+    def _get_file_size(self, file_addr):
+        try:
+            size = os.stat(file_addr).st_size
+        except:
+            size = 0
+        return size
 
 
 

@@ -2,14 +2,15 @@ import cv2
 import numpy as np
 import math
 import time
+import copy
 
 from Simulations.GameFeatures import *
 from Simulations.Visualizers import *
 
 
 class EnvironmentSuit:
-    def __init__(self, nr_of_env, behaviour_model, step_size = 1,variation = 0, distribution = 0, features = None, verbose = 1 ):      #createEnvironments
-        self.environments = self._create_environments(nr_of_env, behaviour_model, step_size, variation, distribution, features, verbose)
+    def __init__(self, nr_of_env, behaviour_model, step_size = 1,variation = 0, distribution = 0, features = None, verbose = 1, file_addr = "Test/", sim_base_name = "Test" ):      #createEnvironments
+        self.environments = self._create_environments(nr_of_env, behaviour_model, step_size, variation, distribution, features, verbose, file_addr, sim_base_name)
         self._print_flag = True
         self._quite_input = 113  # 'q'
         self._speed_up = 43      # '+'
@@ -18,14 +19,20 @@ class EnvironmentSuit:
         self._pause_input = 112  # 'p'
         self._print_toggle = 118 # 'v'
 
-    def _create_environments(self, nr_of_env, behaviour_model, step_size, variation, distribution, env_features_list, verbose):
+    def _create_environments(self, nr_of_env, behaviour_model, step_size, variation, distribution, env_features_list, verbose, file_addr, sim_base_name):
         if env_features_list == None:
             env_features_list = self._generate_env_features(nr_of_env, variation, distribution)
         window_size = self._calc_window_size(nr_of_env)
         environments = []
         for env_nr in range(0, nr_of_env):
-            environments += [Environment("Env_" + str(env_nr+1), behaviour_model, step_size, env_features_list[env_nr], verbose, window_size)]
+            model_addr, result_addr = self._generate_storage_ids(file_addr, sim_base_name, env_nr)
+            environments += [Environment("Env_" + str(env_nr+1), behaviour_model, step_size, env_features_list[env_nr], verbose, window_size, model_addr, result_addr)]
         return environments
+
+    def _generate_storage_ids(self, file_addr, sim_base_name, nr):
+        model_addr = file_addr + sim_base_name + "/models/model_" + str(nr)
+        result_addr = file_addr + sim_base_name + "/results/result_" + str(nr)
+        return model_addr, result_addr
 
     def _calc_window_size(self, nr_of_env):
         #Max 800 i højden og 1600 i bredden
@@ -68,7 +75,7 @@ class EnvironmentSuit:
                 environment.print()
 
     def _simulation_delay(self, simulation_delay):
-        pass #time.sleep(simulation_delay/1000)
+        time.sleep(simulation_delay/1000)
 
     def _get_keyboard_input(self):
         keyPress = cv2.waitKey(1)
@@ -81,7 +88,7 @@ class EnvironmentSuit:
 
 
 class Environment:
-    def __init__(self, name, behaviour_model, step_size, features, verbose = 2, window_size = (600, 600)):
+    def __init__(self, name, behaviour_model, step_size, features, verbose = 2, window_size = (600, 600), model_addr = "Test/Models/model", result_addr = "Test/Results/result"):
         if verbose == 2:
             self._window = self._create_layout(window_size)
             self._window_size = window_size
@@ -93,7 +100,7 @@ class Environment:
         self._game_map_size = self._get_game_map_size(features)
         self._game_objects = self._get_game_objects(features)
         self._color_map_copy = self._create_color_block_map()
-        self._model = behaviour_model(self._get_game_goals(features), self._get_game_state(), self._get_action_inputs())
+        self._model = behaviour_model(self._get_game_goals(features), self._get_game_state(), self._get_action_inputs(), model_addr, result_addr)
 
     def _create_layout(self, window_size):
         img = np.zeros([window_size[0], window_size[1], 3],dtype=np.uint8)  #Square window
@@ -124,7 +131,6 @@ class Environment:
 
     def step(self):
         game_state = self._get_game_state()
-        action_inputs =  self._get_action_inputs()
         action = self._model.action(game_state)
         self._game_react(action)
 
@@ -154,6 +160,8 @@ class Environment:
 
     def _react_on_player_status(self):
         if self._player["Object"].get_health() <= 0:
+            self._model.save_result(self._player["Object"].get_survival_time(), self._player["Object"].get_points(), self._model.get_epsilon())
+            self._model.save_model()
             self._player["Object"].kill_player()
             self._reset_environment()
 
@@ -195,22 +203,23 @@ class Environment:
         return [player_survival_time, player_health, player_points, player_coordinate, map_view]
 
     def _map_view_layered(self):
-        new_map = self._color_map_copy
+        new_map = copy.deepcopy(self._color_map_copy)
         for game_object in self._game_objects:  #First set monsters
             coor = game_object["Location"]
             obj = game_object["Object"]
             if isinstance(obj, GameMonster):
-                new_map[coor[0]-1][coor[1]-1][1] = obj.get_color()
-                new_map[coor[0]-1][coor[1]-1][2] = obj.get_color()
+                new_map[coor[1]-1][coor[0]-1][1] = obj.get_color()
+                new_map[coor[1]-1][coor[0]-1][2] = obj.get_color()
         for game_object in self._game_objects:  #Then set items - To get the right color combination
             coor = game_object["Location"]
             obj = game_object["Object"]
             if isinstance(obj, GameItem):
-                new_map[coor[0]-1][coor[1]-1][2] = obj.get_color()
+                if obj.is_active() == True:
+                    new_map[coor[1]-1][coor[0]-1][2] = obj.get_color()
         return new_map
 
     def _create_color_block_map(self):      #Remember to make the map 2D!!!!!!!!!!!!!
-        coordinate_list = [(coor_h, coor_w) for coor_h in range(1, self._game_map_size[0]+1) for coor_w in range(1, self._game_map_size[1]+1)]
+        coordinate_list = [(coor_h, coor_w) for coor_w in range(1, self._game_map_size[1]+1) for coor_h in range(1, self._game_map_size[0]+1)]
         color_map = []
         color_list = []
         for index, coor in enumerate(coordinate_list):

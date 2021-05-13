@@ -60,9 +60,9 @@ class BehaviouralModelInterface:
     def save_model(self):
         raise Exception("save_model() must be implemented.")
 
-    def save_result(self, survival_time, points, epsilon):
+    def save_result(self, survival_time, points, epsilon, training):
         with open(self._result_addr + ".txt", "a+") as file:
-            file.write(f"SurvivalTime:{survival_time},Points:{points},Epsilon:{epsilon}\n")
+            file.write(f"SurvivalTime:{survival_time},Points:{points},Epsilon:{epsilon},Training:{training}\n")
 
     def _get_file_size(self, file_addr):
         try:

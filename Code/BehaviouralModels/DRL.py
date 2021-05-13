@@ -3,6 +3,7 @@ import numpy as np
 import math
 from collections import deque
 import time
+import os
 
 from tensorflow.keras import models
 from tensorflow.keras import layers 
@@ -14,18 +15,22 @@ from Simulations.GameFeatures import GameFeatures as GF
 from BehaviouralModels.BehaviouralModels import BehaviouralModelInterface
 
 MODEL_NAME = "IndiDQR_1024x2"
-MIN_REPLAY_MEMORY_SIZE = 512
+MIN_REPLAY_MEMORY_SIZE = 2048
 MAX_REPLAY_MEMORY_SIZE = 50_000
-MINIBATCH_SIZE = 512                 #Affect how many states it will use to fit
+MINIBATCH_SIZE = 2048                 #Affect how many states it will use to fit
 
 DISCOUNT = 0.99
 
-UPDATE_TARGET_EVERY = 128
+UPDATE_TARGET_EVERY = 16
+
+MAP_HEIGHT = 14
+MAP_WIDTH = 14
 
 
 
 class CustomCallback(callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
+        return
         print("Loss: {:7.2f}".format(logs["loss"]))
         print("Accuracy: {:7.2f}".format(logs["accuracy"]))
 
@@ -33,31 +38,74 @@ class CustomCallback(callbacks.Callback):
 
 
 class IndiDRL(BehaviouralModelInterface):
-    def __init__(self, goals, initial_game_state, feasible_actions, model_addr, results_addr):
+    def __init__(self, goals, initial_game_state, feasible_actions, model_addr, results_addr): 
         super().__init__(goals, initial_game_state, feasible_actions, results_addr)
+        self._model_addr = model_addr
         self._create_directory(self._model_addr)
+        self._create_model_directory(self._model_addr)
+
         self._mode = None
         self._previous_state = None
         self._previous_prediction = None
         self._previous_score = 0
-        self._epsilon = 1
-        self._epsilon_decay = 0.9975    #0.99975 before
+        self._previous_action = None
+        self._turn_count = 0
+        
+        if self._get_file_size(self._model_addr + ".txt"):
+            #Load
+            self._main_model, self._current_model, self._epsilon = self._load_model()
+        else:
+            #Create
+            #Main model - Get trained every step
+            self._main_model = self._build_model_conv(initial_game_state, feasible_actions)
 
-        #Main model - Get trained every step
-        self._main_model = self._build_model_conv(initial_game_state, feasible_actions)
+            #Target model - This is what we predict against every step
+            self._current_model = self._build_model_conv(initial_game_state, feasible_actions)
+            self._current_model.set_weights(self._main_model.get_weights())
+            #Set epsilon
+            self._epsilon = 1
 
-        #Target model - This is what we predict against every step
-        self._current_model = self._build_model_conv(initial_game_state, feasible_actions)
-        self._current_model.set_weights(self._main_model.get_weights())
+        self._epsilon_decay = 0.99925    #0.99975 before
+        self._episodes = 6000
+        self._episode_epsilon = self._epsilon_decay**self._episodes
+
+        if self._epsilon < self._episode_epsilon:
+            self._epsilon = 0
 
         self._target_update_counter = 0
 
         #Ensures that multiple steps can be fitted at once, so it does not overfit to a single one 
         self._replay_memory = deque(maxlen=MAX_REPLAY_MEMORY_SIZE)
 
+
+    def _create_model_directory(self, addr):
+        try:
+            main_dir = addr + "_main_model/"
+            current_dir = addr + "_current_model/"
+            os.makedirs(main_dir)
+            os.makedirs(current_dir)
+        except FileExistsError:
+            pass
+
+
     def get_epsilon(self):
         return self._epsilon
 
+    def _load_model(self):
+        print("#####LOAD MODEL#####")
+        main_model = models.load_model(self._model_addr + "_main_model")
+        current_model = models.load_model(self._model_addr + "_current_model")
+        epsilon = None
+        with open(self._model_addr + ".txt") as model_file:
+            for line in model_file:
+                epsilon = float(line)
+        return main_model, current_model, epsilon
+
+    def save_model(self):
+        self._main_model.save(self._model_addr + "_main_model")
+        self._current_model.save(self._model_addr + "_current_model")
+        with open(self._model_addr + ".txt", "w") as file:
+            file.write(str(self._epsilon))
 
     def _build_model(self, game_state, feasible_actions):  
         first_layer_size = (len(game_state)) + len(game_state[-1])*3*3      #3 colors in our layers at X pixels + extra info
@@ -78,45 +126,45 @@ class IndiDRL(BehaviouralModelInterface):
 
 
     def _build_model_conv(self, game_state, feasible_actions):
-        inputA = tensorflow.keras.Input(shape=((len(game_state)-1),)) #User info
+        inputA = tensorflow.keras.Input(shape=((len(game_state)-2),)) #User info
         inputB_1 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - first layer
         inputB_2 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - second layer
         inputB_3 = tensorflow.keras.Input(shape=(len(game_state[-1]), len(game_state[-1][0]), 3)) #Map data - third layer
 
         #-------- InputB_1 --------
-        branchB_1 = layers.Conv2D(16, (3, 3), activation = 'relu')(inputB_1)           #Convolutional Hidden Layer
+        branchB_1 = layers.Conv2D(64, (3, 3), activation = 'relu')(inputB_1)           #Convolutional Hidden Layer
         branchB_1 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_1)
         branchB_1 = layers.Dropout(0.2)(branchB_1)
 
-        branchB_1 = layers.Conv2D(32, (3, 3), activation = 'relu')(branchB_1)          #Convolutional Hidden Layer
+        branchB_1 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_1)          #Convolutional Hidden Layer
         branchB_1 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_1)
         branchB_1 = layers.Dropout(0.2)(branchB_1)
 
-        branchB_1 = layers.Flatten()(branchB_1)
+        branchB_1 = layers.Flatten()(inputB_1)
         modelB_1 = models.Model(inputs=inputB_1, outputs=branchB_1)
 
         #-------- InputB_2 --------
-        branchB_2 = layers.Conv2D(16, (3, 3), activation = 'relu')(inputB_2)           #Convolutional Hidden Layer
+        branchB_2 = layers.Conv2D(64, (3, 3), activation = 'relu')(inputB_2)           #Convolutional Hidden Layer
         branchB_2 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_2)
         branchB_2 = layers.Dropout(0.2)(branchB_2)
 
-        branchB_2 = layers.Conv2D(32, (3, 3), activation = 'relu')(branchB_2)          #Convolutional Hidden Layer
+        branchB_2 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_2)          #Convolutional Hidden Layer
         branchB_2 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_2)
         branchB_2 = layers.Dropout(0.2)(branchB_2)
 
-        branchB_2 = layers.Flatten()(branchB_2)
+        branchB_2 = layers.Flatten()(inputB_2)
         modelB_2 = models.Model(inputs=inputB_2, outputs=branchB_2)
 
         #-------- InputB_3 --------
-        branchB_3 = layers.Conv2D(16, (3, 3), activation = 'relu')(inputB_3)           #Convolutional Hidden Layer
+        branchB_3 = layers.Conv2D(64, (3, 3), activation = 'relu')(inputB_3)           #Convolutional Hidden Layer
         branchB_3 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_3)
         branchB_3 = layers.Dropout(0.2)(branchB_3)
 
-        branchB_3 = layers.Conv2D(32, (3, 3), activation = 'relu')(branchB_3)          #Convolutional Hidden Layer
+        branchB_3 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_3)          #Convolutional Hidden Layer
         branchB_3 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_3)
         branchB_3 = layers.Dropout(0.2)(branchB_3)
 
-        branchB_3 = layers.Flatten()(branchB_3)
+        branchB_3 = layers.Flatten()(inputB_3)
         modelB_3 = models.Model(inputs=inputB_3, outputs=branchB_3)
 
 
@@ -129,7 +177,7 @@ class IndiDRL(BehaviouralModelInterface):
 
         model = models.Model(inputs=[inputA, modelB_1.input, modelB_2.input, modelB_3.input], outputs = output)
 
-        opt = optimizers.Adam(learning_rate=0.0001, decay=1e-6)
+        opt = optimizers.Adam(learning_rate=1e-3)
 
         model.compile(loss="mse",
               optimizer=opt,
@@ -155,7 +203,7 @@ class IndiDRL(BehaviouralModelInterface):
         return prediction
 
     def _train(self, terminal_state, step):
-        if len(self._replay_memory) < MIN_REPLAY_MEMORY_SIZE:
+        if len(self._replay_memory) < MIN_REPLAY_MEMORY_SIZE or self._turn_count % 1000 != 0:
             return
     
         minibatch = random.sample(self._replay_memory, MINIBATCH_SIZE)
@@ -166,7 +214,11 @@ class IndiDRL(BehaviouralModelInterface):
         future_state = self._get_future_state(minibatch)
         future_qs_list = self._current_model.predict(future_state)
 
-        X_info = X_l1 = X_l2 = X_l3 = y = []
+        X_info = []
+        X_l1 = []
+        X_l2 = []
+        X_l3 = []
+        y = []
 
         for index, (current_state, action, reward, new_current_state, done, life_changer) in enumerate(minibatch):
             if done:
@@ -182,10 +234,10 @@ class IndiDRL(BehaviouralModelInterface):
 
             self._append_to_input_output_matrices(X_info, X_l1, X_l2, X_l3, y, current_state, current_qs)
 
-        X_info_np = self._transform_info_to_np_structure(X_into)
-        X_l1_np = self._transform_X_to_np_structure(X_l1_np)
-        X_l2_np = self._transform_X_to_np_structure(X_l2_np)
-        X_l3_np = self._transform_X_to_np_structure(X_l3_np)
+        X_info_np = self._transform_info_to_np_structure(X_info)
+        X_l1_np = self._transform_X_to_np_structure(X_l1)
+        X_l2_np = self._transform_X_to_np_structure(X_l2)
+        X_l3_np = self._transform_X_to_np_structure(X_l3)
 
         history = self._main_model.fit([X_info_np, X_l1_np, X_l2_np, X_l3_np], np.array(y), batch_size = MINIBATCH_SIZE, verbose = 0, shuffle=False, callbacks=[CustomCallback()] if terminal_state or step%10 == 1 else None)   #Only call callback if terminal staste
 
@@ -196,19 +248,16 @@ class IndiDRL(BehaviouralModelInterface):
         if self._target_update_counter > UPDATE_TARGET_EVERY:
             self._target_update_counter = 0
             self._current_model.set_weights(self._main_model.get_weights())
-            self._epsilon *= self._epsilon_decay
-            print(f"Epsilon: {self._epsilon}")
-            print(f"History: {history.history}")
 
 
     def _append_to_input_output_matrices(self, X0, X1, X2, X3, y, state, qs):
-        X0.append(state[0])     #Previous state
-        X1.append(state[1])
-        X2.append(state[2])
-        X3.append(state[3])
-        y.append(qs)    #The score it should have let to
+        X0 += [state[0]]    #Previous state
+        X1 += [state[1]]
+        X2 += [state[2]]
+        X3 += [state[3]]
+        y  += [qs]    #The score it should have let to
 
-    def _transform_info_to_np_structure(self, X_into):
+    def _transform_info_to_np_structure(self, X_info):
         X_info_np = np.array(X_info)
         X_info_np = X_info_np.reshape(X_info_np.shape[0], X_info_np.shape[2])
         return X_info_np
@@ -216,6 +265,7 @@ class IndiDRL(BehaviouralModelInterface):
     def _transform_X_to_np_structure(self, X):
         X_np = np.array(X)
         X_np = X_np.reshape(X_np.shape[0], X_np.shape[2], X_np.shape[3], X_np.shape[4])
+        return X_np
 
     def _get_current_state(self, minibatch):
         current_states_0 = np.array([transition[0][0] for transition in minibatch])
@@ -239,40 +289,54 @@ class IndiDRL(BehaviouralModelInterface):
         new_current_state_3 = new_current_state_3.reshape(new_current_state_3.shape[0], new_current_state_3.shape[2], new_current_state_3.shape[3], new_current_state_3.shape[4])
         return [new_current_state_0, new_current_state_1, new_current_state_2, new_current_state_3]
 
-    def action(self, game_state):
-        score = self._calculate_score(game_state[0], game_state[2], game_state[3]) - self._previous_score  #Reward - Use reqard difference instead
-        self._previous_score = self._calculate_score(game_state[0], game_state[2], game_state[3])
+
+
+
+
+    def action(self, game_state, train_flag = True):
+        self._turn_count += 1
         model_state = self._game_to_model_state(game_state)
-        if isinstance(self._previous_state, list):
-            terminal_state = game_state[0] == 0 or model_state[0][0][0] != self._previous_state[0][0][0] or model_state[0][0][1] != self._previous_state[0][0][1] #If dead, different health, or different points
-            self._update_replay_memory((self._previous_state, self._choose_action_from_prediction(self._previous_prediction), score, model_state, game_state[0] == 0, terminal_state))    #Previous state, action taken, score it got, new state it let to, and if it is done (never)
-            self._train(terminal_state , game_state[0])
-        action = self._calculate_action(model_state)
+
+        if train_flag:
+            score = self._calculate_score(game_state[0], game_state[2], game_state[3]) - self._previous_score  #Reward - Use reqard difference instead
+            self._previous_score = self._calculate_score(game_state[0], game_state[2], game_state[3])
+
+            if self._epsilon > self._episode_epsilon and self._epsilon != 0:
+                if self._turn_count % 100 == 0:
+                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    if self._turn_count % 500 == 0:
+                        self._epsilon *= self._epsilon_decay
+                        print(f"Epsilon: {self._epsilon}")
+
+                if isinstance(self._previous_state, list):
+                    terminal_state = game_state[0] == 0 or model_state[0][0][0] != self._previous_state[0][0][0] or model_state[0][0][1] != self._previous_state[0][0][1] #If dead, different health, or different points
+                    self._update_replay_memory((self._previous_state, self._previous_action, score, model_state, game_state[0] == 0, terminal_state))    #Previous state, action taken, score it got, new state it let to, and if it is done (never)
+                    self._train(terminal_state , game_state[0])
+
+            else:
+                if self._turn_count % 100 == 0:
+                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+        elif not self._turn_count % 100:
+            print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+
+        action = self._calculate_action(model_state, 0 if not train_flag or self._epsilon < self._episode_epsilon else self._epsilon)
         return action
 
-    def _modify_model(self, true_score):    #Train model - A new version of this hasve been written to accomidate for RL training. This is more of the traditional way of NN
-        true_prediction = []
-        action_index = self._choose_action_from_prediction(self._previous_prediction)
-        for index, value in enumerate(self._previous_prediction[0]):
-            if index == action_index:
-                true_prediction += [true_score]
-            else:
-                true_prediction += [value]
-        self._main_model.fit(x = np.asarray([self._previous_state]), y = np.asarray([true_prediction]), verbose = 1, shuffle=False)
 
-    def _calculate_action(self, current_state):
+    def _calculate_action(self, current_state, epsilon):
         prediction = self._main_model.predict(current_state)
-        action_index = self._choose_action_from_prediction(prediction)
+        action_index = self._choose_action_from_prediction(prediction, epsilon)
         self._previous_state = current_state
         self._previous_prediction = prediction
+        self._previous_action = action_index
         return self._feasible_actions[action_index]
 
     def _game_to_model_state(self, game_state):
         steps = game_state[0]       #Should this be normalized?
-        life = game_state[1] / 100  #Normalize
+        life = game_state[1]/100  #Normalize
         points = game_state[2]      #Should this be normalized?
-        player_coor = (game_state[3][0]/len(game_state[-1]), game_state[3][1]/len(game_state[-1][0])) #Normalize
-        model_state_attr = [life, points, player_coor[0], player_coor[1]]
+        player_coor = (game_state[3][0]/len(game_state[-1][0]), game_state[3][1]/len(game_state[-1])) #Normalize
+        model_state_attr = [life, player_coor[0], player_coor[1]]
         
         image_shape = (len(game_state[-1]), len(game_state[-1][0]), len(game_state[-1][0][0][0]))
         
@@ -283,18 +347,13 @@ class IndiDRL(BehaviouralModelInterface):
                                          np_map[:,:,2].reshape(-1, *image_shape)/255 ])
         return [np_model_state_attr, np_model_state_map[0], np_model_state_map[1], np_model_state_map[2]]
 
-    def _choose_action_from_prediction(self, prediction):
+    def _choose_action_from_prediction(self, prediction, epsilon):
         prediction = prediction[0]
         #Choose the highest score
-        index_score = [0, prediction[0]]
-        for index, score in enumerate(prediction):
-            if score > index_score[1]:
-                index_score = [index, score]
-        index = index_score[0]
-        if np.random.random() <= self._epsilon:
+        index = np.argmax(prediction)
+        if np.random.random() < epsilon:
             index = np.random.randint(0, len(prediction))
         return index
-
 
 
 

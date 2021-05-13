@@ -16,6 +16,44 @@ class SetupFiles:
 
         return [features]
 
+    
+    def simple__group_features():
+        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+                      "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing}}
+
+        f0 = GF()
+        f0.add_map_layout(GF.MapLayout.SimpleMap, map_setup)
+        f0.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f0.add_start_position((2, 7))
+        f0.add_controls(GF.Controls.LeftRight)
+        f0.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(2, 2), (2, 8), (2, 13)], effect_strength=1, respawn_time=20)
+        f0.add_goals([GF.GoalSystem.Resources])
+
+        f1 = GF()
+        f1.add_map_layout(GF.MapLayout.SimpleMap, map_setup)
+        f1.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f1.add_start_position((2, 7))
+        f1.add_controls(GF.Controls.LeftRight)
+        f1.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(2, 2)], effect_strength=1, respawn_time=20)
+        f1.add_goals([GF.GoalSystem.Resources])
+
+        return [f0, f1]
+
+
+    def simple_features2():
+        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+                      "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing}}
+
+        features = GF()
+        features.add_map_layout(GF.MapLayout.SimpleMap2, map_setup)
+        features.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        features.add_start_position((6, 7))
+        features.add_controls(GF.Controls.LeftRight)
+        features.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (6, 8), (6, 13)], effect_strength=1, respawn_time=20)
+        features.add_goals([GF.GoalSystem.Resources])
+
+        return [features]
+
 
 
 
@@ -123,6 +161,7 @@ class SetupFiles:
         f4.add_goals(goals)
 
         f5 = GF()
+        f5.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
         f5.add_map_layout(GF.MapLayout.DefaultMap1, SS12_map_setup)
         f5.add_item(GF.ItemColor.Blue, GF.ItemEffect.TakeLife, GF.ItemBehaviour.Respawn, [(9, 5), (6, 9), (8, 13), (11, 12), (13, 9)], 1, 5)
         f5.add_monster(GF.MonsterType.Invincible, GF.MonsterColor.Red, GF.MonsterEffect.GiveLife, GF.MonsterBehaviour.DiagonalRight, [(11, 5), (11, 11)], 2, 1)
@@ -132,6 +171,7 @@ class SetupFiles:
         f5.add_goals(goals)
 
         f6 = GF()
+        f6.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
         f6.add_map_layout(GF.MapLayout.DefaultMap4, SS13_map_setup)
         f6.add_start_position((4, 10))
         f6.add_item(GF.ItemColor.Yellow, GF.ItemEffect.TakeLife, GF.ItemBehaviour.Nothing, [(2, 5), (2, 9), (2, 10), (3, 6), (5, 6), (7, 5), (7, 8), (8, 10), (9, 5), (9, 12), (10, 7), (10, 12), (11, 12), (12, 9), (14, 8)], 1, 25)

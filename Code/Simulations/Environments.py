@@ -9,8 +9,8 @@ from Simulations.Visualizers import *
 
 
 class EnvironmentSuit:
-    def __init__(self, nr_of_env, behaviour_model, step_size = 1,variation = 0, distribution = 0, features = None, verbose = 1, file_addr = "Test/", sim_base_name = "Test" ):      #createEnvironments
-        self.environments = self._create_environments(nr_of_env, behaviour_model, step_size, variation, distribution, features, verbose, file_addr, sim_base_name)
+    def __init__(self, nr_of_env, behaviour_model, step_size = 1,variation = 0, distribution = 0, features = None, verbose = 1, file_addr = "Test/", sim_base_name = "Test", training = True ):      #createEnvironments
+        self.environments = self._create_environments(nr_of_env, behaviour_model, step_size, variation, distribution, features, verbose, file_addr, sim_base_name, training)
         self._print_flag = True
         self._quite_input = 113  # 'q'
         self._speed_up = 43      # '+'
@@ -19,14 +19,14 @@ class EnvironmentSuit:
         self._pause_input = 112  # 'p'
         self._print_toggle = 118 # 'v'
 
-    def _create_environments(self, nr_of_env, behaviour_model, step_size, variation, distribution, env_features_list, verbose, file_addr, sim_base_name):
+    def _create_environments(self, nr_of_env, behaviour_model, step_size, variation, distribution, env_features_list, verbose, file_addr, sim_base_name, training):
         if env_features_list == None:
             env_features_list = self._generate_env_features(nr_of_env, variation, distribution)
         window_size = self._calc_window_size(nr_of_env)
         environments = []
         for env_nr in range(0, nr_of_env):
             model_addr, result_addr = self._generate_storage_ids(file_addr, sim_base_name, env_nr)
-            environments += [Environment("Env_" + str(env_nr+1), behaviour_model, step_size, env_features_list[env_nr], verbose, window_size, model_addr, result_addr)]
+            environments += [Environment("Env_" + str(env_nr+1), behaviour_model, step_size, env_features_list[env_nr], verbose, window_size, model_addr, result_addr, training)]
         return environments
 
     def _generate_storage_ids(self, file_addr, sim_base_name, nr):
@@ -88,7 +88,7 @@ class EnvironmentSuit:
 
 
 class Environment:
-    def __init__(self, name, behaviour_model, step_size, features, verbose = 2, window_size = (600, 600), model_addr = "Test/Models/model", result_addr = "Test/Results/result"):
+    def __init__(self, name, behaviour_model, step_size, features, verbose = 2, window_size = (600, 600), model_addr = "Test/Models/model", result_addr = "Test/Results/result", training = True):
         if verbose == 2:
             self._window = self._create_layout(window_size)
             self._window_size = window_size
@@ -101,6 +101,9 @@ class Environment:
         self._game_objects = self._get_game_objects(features)
         self._color_map_copy = self._create_color_block_map()
         self._model = behaviour_model(self._get_game_goals(features), self._get_game_state(), self._get_action_inputs(), model_addr, result_addr)
+        self._train_flag = training
+        self._training = training
+        self._kill_count = 0
 
     def _create_layout(self, window_size):
         img = np.zeros([window_size[0], window_size[1], 3],dtype=np.uint8)  #Square window
@@ -131,7 +134,7 @@ class Environment:
 
     def step(self):
         game_state = self._get_game_state()
-        action = self._model.action(game_state)
+        action = self._model.action(game_state, self._train_flag)
         self._game_react(action)
 
 
@@ -160,8 +163,12 @@ class Environment:
 
     def _react_on_player_status(self):
         if self._player["Object"].get_health() <= 0:
-            self._model.save_result(self._player["Object"].get_survival_time(), self._player["Object"].get_points(), self._model.get_epsilon())
-            self._model.save_model()
+            self._kill_count += 1
+            if self._training:
+                self._model.save_result(self._player["Object"].get_survival_time(), self._player["Object"].get_points(), self._model.get_epsilon(), self._train_flag)
+                if not self._kill_count % 10:
+                    self._model.save_model()
+                self._train_flag = False if self._train_flag else True
             self._player["Object"].kill_player()
             self._reset_environment()
 

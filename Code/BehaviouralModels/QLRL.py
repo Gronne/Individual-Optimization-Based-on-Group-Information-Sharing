@@ -77,7 +77,7 @@ class IndiQLRL(BehaviouralModelInterface):
             self._previous_score = self._calculate_score(game_state[0], game_state[2], game_state[3])
             if self._epsilon > self._episode_epsilon and self._epsilon != 0:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
                     if self._turn_count % 500 == 0:
                         self._epsilon *= self._epsilon_decay
                         print(f"Epsilon: {self._epsilon}")
@@ -88,7 +88,7 @@ class IndiQLRL(BehaviouralModelInterface):
                         self._set_score_in_q_table(self._previous_state, score, self._previous_action, model_state)
             else:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
         action = self._calculate_action(model_state, 0 if not train_flag or self._epsilon < self._episode_epsilon else self._epsilon)
         self._previous_action = action
         return action
@@ -238,7 +238,7 @@ class GroupQLRL(BehaviouralModelInterface):
             self._previous_score = self._calculate_score(game_state[0], game_state[2], game_state[3])
             if self._epsilon > self._episode_epsilon and self._epsilon != 0:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
                     if self._turn_count % 500 == 0:
                         self._epsilon *= self._epsilon_decay
                         print(f"Epsilon: {self._epsilon}")
@@ -249,7 +249,7 @@ class GroupQLRL(BehaviouralModelInterface):
                         self._set_score_in_q_table(self._previous_state, score, self._previous_action, model_state)
             else:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
         action = self._calculate_action(model_state, 0 if not train_flag or self._epsilon < self._episode_epsilon else self._epsilon)
         self._previous_action = action
         return action

@@ -136,9 +136,9 @@ class IndiDRL(BehaviouralModelInterface):
         branchB_1 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_1)
         branchB_1 = layers.Dropout(0.2)(branchB_1)
 
-        branchB_1 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_1)          #Convolutional Hidden Layer
-        branchB_1 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_1)
-        branchB_1 = layers.Dropout(0.2)(branchB_1)
+        #branchB_1 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_1)          #Convolutional Hidden Layer
+        #branchB_1 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_1)
+        #branchB_1 = layers.Dropout(0.2)(branchB_1)
 
         branchB_1 = layers.Flatten()(inputB_1)
         modelB_1 = models.Model(inputs=inputB_1, outputs=branchB_1)
@@ -148,9 +148,9 @@ class IndiDRL(BehaviouralModelInterface):
         branchB_2 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_2)
         branchB_2 = layers.Dropout(0.2)(branchB_2)
 
-        branchB_2 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_2)          #Convolutional Hidden Layer
-        branchB_2 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_2)
-        branchB_2 = layers.Dropout(0.2)(branchB_2)
+        #branchB_2 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_2)          #Convolutional Hidden Layer
+        #branchB_2 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_2)
+        #branchB_2 = layers.Dropout(0.2)(branchB_2)
 
         branchB_2 = layers.Flatten()(inputB_2)
         modelB_2 = models.Model(inputs=inputB_2, outputs=branchB_2)
@@ -160,9 +160,9 @@ class IndiDRL(BehaviouralModelInterface):
         branchB_3 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_3)
         branchB_3 = layers.Dropout(0.2)(branchB_3)
 
-        branchB_3 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_3)          #Convolutional Hidden Layer
-        branchB_3 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_3)
-        branchB_3 = layers.Dropout(0.2)(branchB_3)
+        #branchB_3 = layers.Conv2D(128, (3, 3), activation = 'relu')(branchB_3)          #Convolutional Hidden Layer
+        #branchB_3 = layers.MaxPooling2D(pool_size=(2, 2))(branchB_3)
+        #branchB_3 = layers.Dropout(0.2)(branchB_3)
 
         branchB_3 = layers.Flatten()(inputB_3)
         modelB_3 = models.Model(inputs=inputB_3, outputs=branchB_3)
@@ -303,10 +303,10 @@ class IndiDRL(BehaviouralModelInterface):
 
             if self._epsilon > self._episode_epsilon and self._epsilon != 0:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
                     if self._turn_count % 500 == 0:
                         self._epsilon *= self._epsilon_decay
-                        print(f"Epsilon: {self._epsilon}")
+                        print(f"Epsilon: {self._epsilon}, Name: {self._model_addr}")
 
                 if isinstance(self._previous_state, list):
                     terminal_state = game_state[0] == 0 or model_state[0][0][0] != self._previous_state[0][0][0] or model_state[0][0][1] != self._previous_state[0][0][1] #If dead, different health, or different points
@@ -315,9 +315,9 @@ class IndiDRL(BehaviouralModelInterface):
 
             else:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
         elif not self._turn_count % 100:
-            print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+            print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
 
         action = self._calculate_action(model_state, 0 if not train_flag or self._epsilon < self._episode_epsilon else self._epsilon)
         return action

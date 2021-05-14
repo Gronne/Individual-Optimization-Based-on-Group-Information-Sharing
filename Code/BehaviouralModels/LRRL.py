@@ -265,10 +265,10 @@ class GroupLRRL(BehaviouralModelInterface):
 
             if GroupLRRL._epsilon > self._episode_epsilon and GroupLRRL._epsilon != 0:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
                     if self._turn_count % 500 == 0:
                         GroupLRRL._epsilon *= self._epsilon_decay
-                        print(f"Epsilon: {GroupLRRL._epsilon}")
+                        print(f"Epsilon: {GroupLRRL._epsilon}, Name: {self._model_addr}")
                 
                 if isinstance(self._previous_state, np.ndarray):
                     terminal_state = game_state[0] == 0 or model_state[0] != self._previous_state[0] or game_state[2] != self._previous_game[2] #If dead, different health, or different points
@@ -278,9 +278,9 @@ class GroupLRRL(BehaviouralModelInterface):
 
             else:
                 if self._turn_count % 100 == 0:
-                    print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+                    print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
         elif not self._turn_count % 100:
-            print(f"steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}")
+            print(f"Train: {train_flag}, steps: {self._turn_count}, life: {game_state[1]}, points: {game_state[2]}, score: {self._previous_score}, Name: {self._model_addr}")
 
         action = self._calculate_action([model_state], 0 if not train_flag or self._epsilon < self._episode_epsilon else self._epsilon)
         self._previous_action = action

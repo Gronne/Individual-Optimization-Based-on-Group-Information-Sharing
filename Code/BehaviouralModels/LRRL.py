@@ -216,7 +216,7 @@ class GroupLRRL(BehaviouralModelInterface):
         else:
             #Create
             #Setup regression - One for each action's score
-            if GroupLRRL._regression == None:
+            if GroupLRRL._regressions == None:
                 model_state = self._game_to_model_state(initial_game_state)
                 rand_vals = np.random.uniform(low=-1, high=1, size=(len(feasible_actions)))
                 GroupLRRL._regressions = LinearRegression().fit([model_state], [rand_vals])
@@ -319,7 +319,7 @@ class GroupLRRL(BehaviouralModelInterface):
         return index
 
     def _train(self, terminal_state, step):
-        if len(GroupLRRL._replay_memory) < MIN_REPLAY_MEMORY_SIZE or GroupLRRL._global_training_count % (GroupLRRL._global_instances*1000) != 0 or not terminal_state:
+        if len(GroupLRRL._replay_memory) < MIN_REPLAY_MEMORY_SIZE or GroupLRRL._global_training_count % (GroupLRRL._global_instances*1000) != 0:
             return
         print(f"Training at step: {self._turn_count}")
         minibatch = GroupLRRL._replay_memory

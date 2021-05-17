@@ -74,6 +74,48 @@ class SetupFiles:
 
 
 
+    def simple_group_features2():
+        map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block}, 
+                      "O": {"Color": GF.BlockColor.White, "Effect": GF.BlockEffect.Nothing}}
+
+        f0 = GF()
+        f0.add_map_layout(GF.MapLayout.SimpleMap2, map_setup)
+        f0.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f0.add_start_position((6, 7))
+        f0.add_controls(GF.Controls.LeftRight)
+        f0.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (6, 8), (6, 13)], effect_strength=1, respawn_time=20)
+        f0.add_goals([GF.GoalSystem.Resources])
+
+        f1 = GF()
+        f1.add_map_layout(GF.MapLayout.SimpleMap2, map_setup)
+        f1.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f1.add_start_position((6, 7))
+        f1.add_controls(GF.Controls.LeftRight)
+        f1.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2)], effect_strength=1, respawn_time=20)
+        f1.add_goals([GF.GoalSystem.Resources])
+
+        f2 = GF()
+        f2.add_map_layout(GF.MapLayout.SimpleMap2, map_setup)
+        f2.add_block(GF.BlockColor.Blue, GF.BlockEffect.Block, [(1, 1)])
+        f2.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f2.add_start_position((6, 7))
+        f2.add_controls(GF.Controls.LeftRight)
+        f2.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2), (6, 8), (6, 13)], effect_strength=1, respawn_time=20)
+        f2.add_goals([GF.GoalSystem.Resources])
+
+        f3 = GF()
+        f3.add_map_layout(GF.MapLayout.SimpleMap2, map_setup)
+        f3.add_survival_property(GF.SurvivalProperty.Starve, interval=10, strength=1)
+        f3.add_start_position((6, 7))
+        f3.add_controls(GF.Controls.LeftRight)
+        f3.add_item(GF.ItemColor.Blue, GF.ItemEffect.TakePoints, GF.ItemBehaviour.Respawn, [(6, 8), (6, 13)], effect_strength=1, respawn_time=20)
+        f3.add_item(GF.ItemColor.Blue, GF.ItemEffect.GivePoints, GF.ItemBehaviour.Respawn, [(6, 2)], effect_strength=1, respawn_time=20)
+        f3.add_goals([GF.GoalSystem.Resources, GF.GoalSystem.Time])
+
+        return [f0, f1, f2, f3]
+
+
+
 
     def first_features():
         map_setup = { "X": {"Color": GF.BlockColor.Black, "Effect": GF.BlockEffect.Block},

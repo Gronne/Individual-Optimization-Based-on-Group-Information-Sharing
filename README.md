@@ -1,7 +1,7 @@
 # Group-Based-Optimization
 Group Based Optimization
 
-Following packages is required to run the program:
+Following packages are required to run the program:
 
 * Python 3.7+
 * Numpy

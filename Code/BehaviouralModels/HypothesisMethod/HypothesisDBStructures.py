@@ -95,15 +95,15 @@ class HypothesisDB:
         print("")
         print("")
 
-    def create(self):
+    def create(self, effect_score):
         rand_id = random.randint(0, 1000000000)
         while rand_id in self._db:
             rand_id = random.randint(0, 1000000000)
-        self._db[rand_id] = self._create_new_entry(rand_id)
+        self._db[rand_id] = self._create_new_entry(rand_id, effect_score)
         return rand_id
 
-    def _create_new_entry(self, id):
-        return {"Id": id, "Hypothesis": Hypothesis(), "Tests": {}, "Agents": {}}
+    def _create_new_entry(self, id, effect_score):
+        return {"Id": id, "Hypothesis": Hypothesis(effect_score), "Tests": {}, "Agents": {}}
 
     def add_test(self, hypothesis_id, test_id):
         self._db[hypothesis_id]["Tests"][test_id] = {"Id": test_id, "Support": None}

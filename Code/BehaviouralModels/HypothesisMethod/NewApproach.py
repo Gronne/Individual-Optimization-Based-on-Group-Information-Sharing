@@ -65,7 +65,8 @@ class HypothesesLearning():        #This is the group method, as it should be. S
 
         if self._first_action():
             #Check if test or discovery, check for hypotheses in the DB
-            hypotheses = self._backend.get_test_worthy_hypotheses(current_state)
+            hypotheses_relevant = self._backend.get_relevant_hypotheses(current_state)
+            hypotheses_test_worthy = self._backend.get_test_worthy_hypotheses(current_state)
             hypothesis = self._choose_hypothesis(hypotheses)
 
         #First action in state

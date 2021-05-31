@@ -27,8 +27,8 @@ class HypothesisBackend:
         self._agentDB.remove_agent(agent_id)
 
 
-    def create_hypothesis(self):
-        return self._hypothesisDB.create()
+    def create_hypothesis(self, effect_score):
+        return self._hypothesisDB.create(effect_score)
 
     def remove_hypothesis(self, hypothesis_id):
         for test_id in self._hypothesisDB.get_tests(hypothesis_id):
@@ -79,3 +79,22 @@ class HypothesisBackend:
     def get_hypothesis(self, hypothesis_id):
         return self._hypothesisDB.get_hypothesis(hypothesis_id)
 
+
+    def get_relevant_hypotheses(self, state):
+        #Check which hypotheses that appear in the state
+        relevant_hypotheses = []
+        for hypothesis_id in self._hypothesisDB.get_all_hypothesis_ids():
+            hypothesis = self._hypothesisDB.get_hypothesis(hypothesis_id)
+            indexes = self._find_patterns_in_state(state, hypothesis)
+            if len(indexes):
+                relevant_hypotheses += [hypothesis_id]
+        return relevant_hypotheses
+
+
+    def _find_patterns_in_state(self, state, hypothesis):
+        #Check if any component or sub component exist in the state
+        for sub_diff in hypothesis.get_difference().get_difference():
+            index = sub_diff[0]
+            from_state = sub_diff[1]
+            if index == '?':
+                pass
